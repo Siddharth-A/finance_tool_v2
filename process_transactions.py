@@ -25,35 +25,37 @@ white  = PatternFill(start_color='ffffff',end_color='ffffff',fill_type='solid')
 black  = PatternFill(start_color='000000',end_color='000000',fill_type='solid')
 
 # global variables
-tran_mon                = ""
+tran_mon                = input("enter month of transactions: ")
 bmo_csv_mc              = ""
 bmo_csv_mc_sheet_name   = ""
 cibc_csv_chq            = ""
 cibc_csv_chq_sheet_name = ""
-# cibc_csv_visa           = ""
-# cibc_csv_visa_sheet_name= ""
+cibc_csv_visa           = ""
+cibc_csv_visa_sheet_name= ""
 # template_file_name       = ""
 # template_file_sheet_name = ""
-output_file             = ""
+
+output_file             = tran_mon + "-transactions.xlsx"
 output_file_sheet_title = ""
+
+wb = Workbook()
+ws = wb.active
+wb.save(output_file)
 
 """###################################################
 store data input by user into global variables
 ###################################################"""
 def process_user_input():
-    global tran_mon, bmo_csv_mc, cibc_csv_chq, output_file, output_file_sheet_title
-    tran_mon = input("enter month of transactions: ")
+    global tran_mon, bmo_csv_mc, cibc_csv_chq, cibc_csv_visa
     bmo_csv_mc = input("enter BMO transactions file name     : ")
     cibc_csv_chq = input("enter CIBC CHQ transactions file name: ")
+    cibc_csv_visa = input("enter CIBC VISA transactions file name: ")
 
     # global template_file_name
     # template_file_name = input("enter template transactions file name: ")
 
-    output_file = tran_mon + "-transactions.xlsx"
-    output_file_sheet_title = tran_mon
-
 """###################################################
-process bmo csv file into a consistent format 
+process bmo csv file into a consistent format
 bmo_mc sheet composition:
 - col A: date
 - col B: transaction detail
@@ -63,10 +65,10 @@ bmo_mc sheet composition:
 ###################################################"""
 def process_bmo_mc(bmo_csv_mc):
     print("\n1) process BMO transactions file: {}".format(bmo_csv_mc))
-    wb = Workbook()
-    ws = wb.active
+    wb = load_workbook(output_file)
     global bmo_csv_mc_sheet_name
     bmo_csv_mc_sheet_name = tran_mon + "-bmo mc"
+    ws = wb.create_sheet(bmo_csv_mc_sheet_name)
 
     # copy from csv to output_file
     with open(bmo_csv_mc,'r') as f:
@@ -85,7 +87,7 @@ def process_bmo_mc(bmo_csv_mc):
     # convert transaction date value to data (from formula)
     ws.title = bmo_csv_mc_sheet_name
     wb.save(output_file)
-    reply = input("open {}, make col A values only and then press enter ".format(output_file)) 
+    reply = input("open {}, make col A values only and then press enter ".format(output_file))
     wb = load_workbook(output_file)
     ws = wb[bmo_csv_mc_sheet_name]
 
@@ -126,14 +128,14 @@ def process_bmo_mc(bmo_csv_mc):
     while i <= ws.max_row:
         ws.cell(row=i, column=5).value = 'BMO MC'
         i +=1
-    
+
 
     # save workbook
     wb.save(output_file)
     print("done")
 
 """###################################################
-process cibc chq csv file into a consistent format 
+process cibc chq csv file into a consistent format
 cibc chq sheet composition:
 - col A: date
 - col B: transaction detail
@@ -152,13 +154,49 @@ def process_cibc_chq(cibc_csv_chq):
     with open(cibc_csv_chq,'r') as f:
         for row in csv.reader(f):
             ws.append(row)
-    
+
+    # format column 3 & 4 currency + add transaction type
+    i = 1
+    while i <= ws.max_row:
+        ws.cell(row=i, column=3).value = float(ws.cell(row=i, column=3).value)
+        ws.cell(row=i, column=3).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+        ws.cell(row=i, column=4).value = float(ws.cell(row=i, column=4).value)
+        ws.cell(row=i, column=4).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+        ws.cell(row=i, column=5).value = 'CIBC CHQ'
+        i +=1
+
+    # save workbook
+    wb.save(output_file)
+    print("done")
+
+"""###################################################
+process cibc visa csv file into a consistent format
+cibc visa sheet composition:
+- col A: date
+- col B: transaction detail
+- col C: debit transaction
+- col D: credit transaction
+- col E: transaction type
+###################################################"""
+def process_cibc_visa(cibc_csv_visa):
+    print("\n3) process CIBC VISA transactions file: {}".format(cibc_csv_visa))
+    wb = load_workbook(output_file)
+    global cibc_csv_visa_sheet_name
+    cibc_csv_visa_sheet_name = tran_mon + "-cibc visa"
+    ws = wb.create_sheet(cibc_csv_visa_sheet_name)
+
+    # copy from csv to output_file
+    with open(cibc_csv_chq,'r') as f:
+        for row in csv.reader(f):
+            ws.append(row)
+
     # format column 3 & 4 currency + add transaction type
     i = 1
     while i <= ws.max_row:
         ws.cell(row=i, column=3).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
         ws.cell(row=i, column=4).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
-        ws.cell(row=i, column=5).value = 'CIBC CHQ'
+        ws.cell(row=i, column=5).value = 'CIBC VISA'
+        i +=1
 
     # save workbook
     wb.save(output_file)
@@ -173,12 +211,18 @@ sample template process function
     # template_file_sheet_name = tran_mon + "-xxxx"
     # ws = wb.create_sheet(template_file_sheet_name)
 
+"""###################################################
+###################################################"""
+def construct_monthly_transactions():
+    print("abc")
+
+
 def main():
     process_user_input()
     process_bmo_mc(bmo_csv_mc)
     process_cibc_chq(cibc_csv_chq)
-    # process_cibc_chq(cibc_csv_visa)
-    # construct_master_sheet
+    process_cibc_visa(cibc_csv_visa)
+    construct_monthly_transactions
 
 if __name__== "__main__":
   main()
