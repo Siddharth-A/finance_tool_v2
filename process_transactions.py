@@ -9,20 +9,18 @@ from openpyxl import load_workbook, Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, numbers
 
 # internal libraries
+import categories
 
 # colors
 orange = PatternFill(start_color='ffcaa1',end_color='ffcaa1',fill_type='solid')
 purple = PatternFill(start_color='dbb5ff',end_color='dbb5ff',fill_type='solid')
-red1   = PatternFill(start_color='ffa1a1',end_color='ffa1a1',fill_type='solid')
-red2   = PatternFill(start_color='e06565',end_color='e06565',fill_type='solid')
-red3   = PatternFill(start_color='ff2e2e',end_color='ff2e2e',fill_type='solid')
+red    = PatternFill(start_color='ff2e2e',end_color='ff2e2e',fill_type='solid')
 yellow = PatternFill(start_color='fffa99',end_color='fffa99',fill_type='solid')
-green1 = PatternFill(start_color='c1ffab',end_color='c1ffab',fill_type='solid')
-green2 = PatternFill(start_color='00ff80',end_color='00ff80',fill_type='solid')
-green3 = PatternFill(start_color='34fa4f',end_color='34fa4f',fill_type='solid')
+green  = PatternFill(start_color='00ff80',end_color='00ff80',fill_type='solid')
 blue   = PatternFill(start_color='abf2ff',end_color='abf2ff',fill_type='solid')
 white  = PatternFill(start_color='ffffff',end_color='ffffff',fill_type='solid')
 black  = PatternFill(start_color='000000',end_color='000000',fill_type='solid')
+pink   = PatternFill(start_color='ff82d1',end_color='ff82d1',fill_type='solid')
 
 # global variables
 tran_mon                = input("enter month of transactions: ")
@@ -160,7 +158,7 @@ def process_cibc_chq(input_file):
 
         if ws.cell(row=i, column=3).value is "":
             ws.cell(row=i, column=3).value = 0
-        
+
         if ws.cell(row=i, column=4).value is "":
             ws.cell(row=i, column=4).value = 0
 
@@ -203,7 +201,7 @@ def process_cibc_visa(input_file):
 
         if ws.cell(row=i, column=3).value is "":
             ws.cell(row=i, column=3).value = 0
-        
+
         if ws.cell(row=i, column=4).value is "":
             ws.cell(row=i, column=4).value = 0
 
@@ -212,22 +210,13 @@ def process_cibc_visa(input_file):
 
         ws.cell(row=i, column=3).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
         ws.cell(row=i, column=4).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
-        
+
         ws.cell(row=i, column=5).value = 'CIBC VISA'
         i +=1
 
     # save workbook
     wb.save(output_file)
     print("done")
-
-"""###################################################
-sample template process function
-###################################################"""
-# def process_template(template_file_name):
-    # wb = load_workbook(output_file)
-    # global template_file_sheet_name
-    # template_file_sheet_name = tran_mon + "-xxxx"
-    # ws = wb.create_sheet(template_file_sheet_name)
 
 """###################################################
 ###################################################"""
@@ -268,18 +257,84 @@ def construct_monthly_transactions():
     while i <= ws_dst.max_row:
         ws_dst.cell(row=i, column=1).number_format = numbers.FORMAT_DATE_YYYYMMDD2
         ws_dst.cell(row=i, column=3).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
-        ws_dst.cell(row=i, column=4).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE        
+        ws_dst.cell(row=i, column=4).number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
         i +=1
 
     wb.save(output_file)
     print("done")
 
+"""###################################################
+###################################################"""
+def classify_transactions():
+    print("\n5) classify transactions")
+    no_match = 0
+    # wb = load_workbook(output_file)
+    # ws = wb[output_file_sheet_title]
+    wb = load_workbook("feb-transactions.xlsx")
+    ws = wb["feb-aggregate"]
+    colB = ws['B']
+    
+    for cell_des in colB:
+        cell = cell_des.value
+        if any(word in cell for word in categories.grocery):
+            cell_des.fill = red
+            continue
+
+        elif any(word in cell for word in categories.resteraunts):
+            cell_des.fill = red
+            continue
+
+        elif any(word in cell for word in categories.entertain):
+            cell_des.fill = red
+            continue
+
+        elif any(word in cell for word in categories.transport):
+            cell_des.fill = orange
+            continue
+
+        elif any(word in cell for word in categories.personal):
+            cell_des.fill = orange
+            continue
+
+        elif any(word in cell for word in categories.retail):
+            cell_des.fill = orange
+            continue
+ 
+        elif any(word in cell for word in categories.credit):
+            cell_des.fill = green 
+            continue
+ 
+        elif any(word in cell for word in categories.pay):
+            cell_des.fill = green 
+            continue
+ 
+        elif any(word in cell for word in categories.savings):
+            cell_des.fill = green 
+            continue
+ 
+        elif any(word in cell for word in categories.investments):
+            cell_des.fill = pink 
+            continue
+
+        else:
+            no_match+=1
+            continue
+
+    print("unmatched entry count: {}".format(no_match))
+    wb.save("feb-transactions.xlsx")
+    print("done")
+
+"""###################################################
+######################################################
+######################################################
+###################################################"""
 def main():
-    process_user_input()
-    process_bmo_mc(bmo_csv_mc)
-    process_cibc_chq(cibc_csv_chq)
-    process_cibc_visa(cibc_csv_visa)
-    construct_monthly_transactions()
+    # process_user_input()
+    # process_bmo_mc(bmo_csv_mc)
+    # process_cibc_chq(cibc_csv_chq)
+    # process_cibc_visa(cibc_csv_visa)
+    # construct_monthly_transactions()
+    classify_transactions()
 
 if __name__== "__main__":
   main()
