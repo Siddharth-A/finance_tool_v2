@@ -329,11 +329,11 @@ def classify_transactions():
 ######################################################
 ###################################################"""
 def main():
-    # process_user_input()
-    # process_bmo_mc(bmo_csv_mc)
-    # process_cibc_chq(cibc_csv_chq)
-    # process_cibc_visa(cibc_csv_visa)
-    # construct_monthly_transactions()
+    process_user_input()
+    process_bmo_mc(bmo_csv_mc)
+    process_cibc_chq(cibc_csv_chq)
+    process_cibc_visa(cibc_csv_visa)
+    construct_monthly_transactions()
     classify_transactions()
 
 if __name__== "__main__":
