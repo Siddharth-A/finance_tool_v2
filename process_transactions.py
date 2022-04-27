@@ -85,7 +85,7 @@ def process_bmo_mc(input_file):
     # convert transaction date value to data (from formula)
     ws.title = bmo_csv_mc_sheet_name
     wb.save(output_file)
-    reply = input("open {}, make col A values only and then press enter ".format(output_file))
+    reply = input("open {}, make col A values only and then press enter ".format(bmo_csv_mc_sheet_name))
     wb = load_workbook(output_file)
     ws = wb[bmo_csv_mc_sheet_name]
 
@@ -152,14 +152,29 @@ def process_cibc_chq(input_file):
         for row in csv.reader(f):
             ws.append(row)
 
-    # format column 3 & 4 currency + add transaction type
+    # convert column 1 date to true date and put in column 10
     i = 1
     while i <= ws.max_row:
+        ws.cell(row=i, column=10).value = '=DATEVALUE(A{})'.format(i)
+        i +=1
 
-        if ws.cell(row=i, column=3).value is "":
+    wb.save(output_file)
+    reply = input("open {}, make col J values only and then press enter ".format(cibc_csv_chq_sheet_name))
+    wb = load_workbook(output_file)
+    ws = wb[cibc_csv_chq_sheet_name]
+
+    # move column 10 to column 1
+    ws.move_range("J1:J{}".format(ws.max_row), rows=0, cols=-9)
+
+    # set column 1 date format + format column 3 & 4 currency + add transaction type
+    i = 1
+    while i <= ws.max_row:
+        ws.cell(row=i, column=1).number_format = numbers.FORMAT_DATE_YYYYMMDD2
+
+        if ws.cell(row=i, column=3).value is None:
             ws.cell(row=i, column=3).value = 0
 
-        if ws.cell(row=i, column=4).value is "":
+        if ws.cell(row=i, column=4).value is None:
             ws.cell(row=i, column=4).value = 0
 
         ws.cell(row=i, column=3).value = float(ws.cell(row=i, column=3).value)
@@ -195,14 +210,29 @@ def process_cibc_visa(input_file):
         for row in csv.reader(f):
             ws.append(row)
 
-    # format column 3 & 4 currency + add transaction type
+    # convert column 1 date to true date and put in column 10
     i = 1
     while i <= ws.max_row:
+        ws.cell(row=i, column=10).value = '=DATEVALUE(A{})'.format(i)
+        i +=1
 
-        if ws.cell(row=i, column=3).value is "":
+    wb.save(output_file)
+    reply = input("open {}, make col J values only and then press enter ".format(cibc_csv_visa_sheet_name))
+    wb = load_workbook(output_file)
+    ws = wb[cibc_csv_visa_sheet_name]
+
+    # move column 10 to column 1
+    ws.move_range("J1:J{}".format(ws.max_row), rows=0, cols=-9)
+
+    # set column 1 date format + format column 3 & 4 currency + add transaction type
+    i = 1
+    while i <= ws.max_row:
+        ws.cell(row=i, column=1).number_format = numbers.FORMAT_DATE_YYYYMMDD2
+
+        if ws.cell(row=i, column=3).value is None:
             ws.cell(row=i, column=3).value = 0
 
-        if ws.cell(row=i, column=4).value is "":
+        if ws.cell(row=i, column=4).value is None:
             ws.cell(row=i, column=4).value = 0
 
         ws.cell(row=i, column=3).value = float(ws.cell(row=i, column=3).value)
@@ -268,12 +298,10 @@ def construct_monthly_transactions():
 def classify_transactions():
     print("\n5) classify transactions")
     no_match = 0
-    # wb = load_workbook(output_file)
-    # ws = wb[output_file_sheet_title]
-    wb = load_workbook("feb-transactions.xlsx")
-    ws = wb["feb-aggregate"]
+    wb = load_workbook(output_file)
+    ws = wb[output_file_sheet_title]
     colB = ws['B']
-    
+
     for cell_des in colB:
         cell = cell_des.value
         if any(word in cell for word in categories.grocery):
@@ -299,21 +327,21 @@ def classify_transactions():
         elif any(word in cell for word in categories.retail):
             cell_des.fill = orange
             continue
- 
+
         elif any(word in cell for word in categories.credit):
-            cell_des.fill = green 
+            cell_des.fill = green
             continue
- 
+
         elif any(word in cell for word in categories.pay):
-            cell_des.fill = green 
+            cell_des.fill = green
             continue
- 
+
         elif any(word in cell for word in categories.savings):
-            cell_des.fill = green 
+            cell_des.fill = green
             continue
- 
+
         elif any(word in cell for word in categories.investments):
-            cell_des.fill = pink 
+            cell_des.fill = pink
             continue
 
         else:
@@ -321,7 +349,7 @@ def classify_transactions():
             continue
 
     print("unmatched entry count: {}".format(no_match))
-    wb.save("feb-transactions.xlsx")
+    wb.save(output_file)
     print("done")
 
 """###################################################

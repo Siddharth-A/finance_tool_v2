@@ -1,4 +1,8 @@
+test.py
 categories.py
 .vscode
+*.csv
+*.xls
+*.xlsx
 __pycache__
 transactions
